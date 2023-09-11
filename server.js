@@ -1,17 +1,18 @@
-const express = require('express');
+const express = require("express");
 const fs = require("fs");
-const path = require('path');
-const api = require('./db/db');
-
-
+const path = require("path");
+const api = require("./db/db");
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.static('public'));
-app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, "/public/index.html")))
+
+app.get("/nodes", (req, res) => res.sendFile(path.join(__dirname, "/public/nodes.html")))
 
 app.route("/api/routes")
     .get((req, res) => res.json(api))
