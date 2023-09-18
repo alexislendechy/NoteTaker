@@ -5,7 +5,7 @@
 
 NoteTaker is a web application that allows users to create, save, view, and delete notes. It uses an Express.js backend to manage note data and a simple user interface for taking and managing notes. With Note Taker, you can keep your important thoughts, ideas, and reminders organized and easily accessible.
 
-![Note Taker Screenshot](/NoteTaker/Screenshot.png)
+![Note Taker Screenshot](./Screenshot.png)
 
 ## Table of Contents
 
