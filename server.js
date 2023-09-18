@@ -1,41 +1,70 @@
-const express = require("express");
-const fs = require("fs");
-const path = require("path");
-const api = require("./db/db");
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid'); // Import the v4 function from uuid
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.static('public'));
-app.use(express.urlencoded({ extended: true }));
+// Middleware for JSON parsing
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.get("/", (req, res) => res.sendFile(path.join(__dirname, "/public/index.html")))
+// Serve static assets (HTML, CSS, JS)
+app.use('/NoteTaker/public', express.static(path.join(__dirname, 'public')));
 
-app.get("/nodes", (req, res) => res.sendFile(path.join(__dirname, "/public/nodes.html")))
+// Route to serve the homepage
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
-app.route("/api/routes")
-    .get((req, res) => res.json(api))
-    .post((req, res) => {
-        const jsonFilePath = path.join(__dirname, "/db/db.json'");
-        const newNote = req.body;
-        const highestiD = Math.max(...api.map(note => note.id), 0);
-        newNote.id = highestiD + 1;
-        api.push(newNote);
-        fs.writeFileSync(jsonFilePath, JSON.stringify(api));
-    });
+// Route to serve the notes page
+app.get('/notes', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'notes.html'));
+});
 
-app.delete("/api/notes/:id", (req, res) => {
-        const jsonFilePath = path.join(__dirname, "/db/db.json'");
-        const idToDelete = parseInt(req.params.id);
-        const indexToDelete = api.findIndex(note => note.id === idToDelete);
-        if ( indexToDelete !== -1){
-            api.splice(indexToDelete, 1);
-            fs.writeFileSync(jsonFilePath, JSON.stringify(api));
-        }
-        res.json(api);
-})
+// API route to retrieve notes
+app.get('/api/notes', (req, res) => {
+  const notes = getNotes();
+  res.json(notes);
+});
 
-app.listen(PORT, () =>
-  console.log(`App listening at http://localhost:${PORT}`)
-);
+// API route to save a new note
+app.post('/api/notes', (req, res) => {
+  const newNote = req.body;
+  newNote.id = uuidv4(); // Generate a unique ID
+
+  const notes = getNotes();
+  notes.push(newNote);
+
+  saveNotes(notes);
+
+  res.json(newNote);
+});
+
+// API route to delete a note
+app.delete('/api/notes/:id', (req, res) => {
+  const idToDelete = req.params.id;
+  const notes = getNotes();
+  const filteredNotes = notes.filter((note) => note.id !== idToDelete);
+
+  saveNotes(filteredNotes);
+
+  res.json({ message: 'Note deleted' });
+});
+
+// Function to read notes from the JSON file
+const getNotes = () => {
+  const data = fs.readFileSync(path.join(__dirname, 'db', 'db.json'), 'utf8');
+  return JSON.parse(data) || [];
+};
+
+// Function to save notes to the JSON file
+const saveNotes = (notes) => {
+  fs.writeFileSync(path.join(__dirname, 'db', 'db.json'), JSON.stringify(notes));
+};
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
